@@ -1,0 +1,75 @@
+apply plugin: 'com.android.application'
+
+def releaseTime() {
+    return new Date().format("yyyy-MM-dd", TimeZone.getTimeZone("UTC"))
+}
+
+def signature_name = 'uvc.jks'
+def storePass = '123456'
+def keAlias = 'uvc'
+def keyPass = '123456'
+
+def keyStore = file(signature_name)
+
+android {
+	compileSdk 34
+
+    defaultConfig {
+        applicationId "cn.eyecool.usbcameratest"
+        minSdk 21
+		targetSdk 34
+		versionCode 1
+		versionName "1.0.0"
+
+        ndk {
+            abiFilters "armeabi-v7a","arm64-v8a"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    signingConfigs {
+        release {
+            storeFile file(signature_name)
+            storePassword project.hasProperty('STOREPASS') ? STOREPASS : storePass
+            keyAlias project.hasProperty('KEYALIAS') ? KEYALIAS : keAlias
+            keyPassword project.hasProperty('KEYPASS') ? KEYPASS : keyPass
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+
+            if (keyStore.exists()) {
+                println "using eyecool's key"
+                signingConfig signingConfigs.release
+            } else {
+                println "using default key"
+            }
+        }
+    }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "app_uvccamera_${variant.buildType.name}_v${defaultConfig.versionName}_${defaultConfig.versionCode}_${releaseTime()}.apk"
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
+    }
+    namespace 'cn.eyecool.uvc.demo'
+}
+
+dependencies {
+    api project(':libuvccamera')
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+}

@@ -1,0 +1,39 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.xiaozhi003.uvcapp.MainActivity">
+    <item
+        android:id="@+id/action_settings"
+        android:orderInCategory="100"
+        android:title="@string/action_settings"
+        android:visible="false"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_video_format"
+        android:orderInCategory="100"
+        android:title="@string/action_video_format" />
+
+    <item
+        android:id="@+id/action_device_info"
+        android:orderInCategory="100"
+        android:title="@string/action_device_info" />
+
+    <item
+        android:id="@+id/action_mirror"
+        android:orderInCategory="100"
+        android:title="@string/action_mirror" />
+
+    <item
+        android:id="@+id/action_control"
+        android:icon="@drawable/ic_action_control"
+        android:title="@string/action_control"
+        android:visible="true"
+        app:showAsAction="ifRoom" />
+
+    <item
+        android:id="@+id/action_device"
+        android:icon="@drawable/ic_action_usb"
+        android:title="@string/action_usb"
+        app:showAsAction="ifRoom" />
+</menu>

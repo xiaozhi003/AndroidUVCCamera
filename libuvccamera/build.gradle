@@ -1,0 +1,88 @@
+apply plugin: 'com.android.library'
+
+import org.apache.tools.ant.taskdefs.condition.Os
+
+android {
+    compileSdk 34
+
+    defaultConfig {
+        minSdk 21
+        targetSdk 34
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+    sourceSets {
+        main {
+            jniLibs.srcDir 'src/main/libs'
+        }
+    }
+
+    lintOptions {
+        checkReleaseBuilds false
+        // Or, if you prefer, you can continue to check for errors in release builds,
+        // but continue the build even when errors are found:
+        abortOnError false
+    }
+    namespace 'com.xiaozhi003.uvccamera'
+
+    android.libraryVariants.all { variant ->
+        variant.outputs.all { output ->
+            outputFileName = "lib-uvccamera-v${defaultConfig.versionName}.aar"
+        }
+    }
+}
+
+String getNdkBuildPath() {
+    Properties properties = new Properties()
+    properties.load(project.rootProject.file('local.properties').newDataInputStream())
+    def ndkBuildingDir = properties.getProperty("ndk.dir")
+    def ndkBuildPath = ndkBuildingDir
+    if (Os.isFamily(Os.FAMILY_WINDOWS)) {
+        ndkBuildPath = ndkBuildingDir + '/ndk-build.cmd'
+    } else {
+        ndkBuildPath = ndkBuildingDir + '/ndk-build'
+    }
+    return ndkBuildPath
+}
+
+task ndkBuild(type: Exec, description: 'Compile JNI source via NDK') {
+    println('executing ndkBuild')
+    def ndkBuildPath = getNdkBuildPath()
+    commandLine ndkBuildPath, //本地ndk路径
+            'NDK_PROJECT_PATH=' + file('src/main').absolutePath,
+            'NDK_LIBS_OUT=' + file('src/main/libs').absolutePath,
+            'APP_BUILD_SCRIPT=' + file('src/main').absolutePath + '/jni/Android.mk',
+            'NDK_APPLICATION_MK=' + file('src/main').absolutePath + '/jni/Application.mk',
+            '-j4'
+}
+
+task ndkClean(type: Exec, description: 'clean JNI libraries') {
+    println('executing ndkBuild clean')
+    def ndkBuildPath = getNdkBuildPath()
+    commandLine ndkBuildPath, 'clean', '-C', file('src/main').absolutePath
+}
+
+clean.dependsOn 'ndkClean'
+// 使用该方式进行native关联编译；解决tasks.withType(JavaCompile)导致的首次编译，so无法打包到apk中的问题；
+preBuild.dependsOn ndkBuild
+
+dependencies {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+}
+
+afterEvaluate {
+    // 删除BuildConfig.class
+    generateReleaseBuildConfig.enabled = false
+    generateDebugBuildConfig.enabled = false
+}
+
